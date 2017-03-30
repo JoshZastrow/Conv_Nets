@@ -16,6 +16,7 @@ def affine_relu_forward(x, w, b):
   """
   a, fc_cache = affine_forward(x, w, b)
   out, relu_cache = relu_forward(a)
+
   cache = (fc_cache, relu_cache)
   return out, cache
 
@@ -40,7 +41,7 @@ def conv_relu_forward(x, w, b, conv_param):
   Inputs:
   - x: Input to the convolutional layer
   - w, b, conv_param: Weights and parameters for the convolutional layer
-  
+
   Returns a tuple of:
   - out: Output from the ReLU
   - cache: Object to give to the backward pass
