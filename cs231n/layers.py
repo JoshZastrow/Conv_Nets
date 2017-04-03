@@ -28,7 +28,6 @@ def affine_forward(x, w, b):
         N = x.shape[0]
         D = np.prod(x.shape[1:])
         x_s = x.reshape((N, D))
-
         out = x_s.dot(w) + b
 
         #########################################################################
@@ -554,6 +553,7 @@ def softmax_loss(x, y):
     - loss: Scalar giving the loss
     - dx: Gradient of the loss with respect to x
     """
+
     probs = np.exp(x - np.max(x, axis=1, keepdims=True))
     probs /= np.sum(probs, axis=1, keepdims=True)
     N = x.shape[0]

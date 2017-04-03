@@ -3,6 +3,11 @@ from cs231n.layers import *
 from cs231n.layer_utils import *
 
 
+'''
+TO DO: Fix addition of b in layers.py line 260. The b has a shape of 15 (dimensions and does not add to
+the dot product of x and w)
+'''
+
 class TwoLayerNet(object):
     """
     A two-layer fully-connected neural network with ReLU nonlinearity and
@@ -188,8 +193,8 @@ class FullyConnectedNet(object):
 
         for i, d_out in enumerate(layer_dimensions):
 
-            self.params['W{}'.format(i)] = weight_scale * np.randn(d_in, d_out)
-            self.params['b{}'.format(i)] = np.zeros(d_in)
+            self.params['W{}'.format(i)] = weight_scale * np.random.randn(d_in, d_out)
+            self.params['b{}'.format(i)] = np.zeros(d_out)
             d_in = d_out
 
         # When using dropout we need to pass a dropout_param dictionary to each
@@ -215,7 +220,6 @@ class FullyConnectedNet(object):
         for k, v in self.params.items():
             self.params[k] = v.astype(dtype)
 
-
     def loss(self, X, y=None):
         """
         Compute loss and gradient for the fully-connected net.
@@ -235,36 +239,42 @@ class FullyConnectedNet(object):
 
         scores = None
 
-        ############################################################################
-        # TODO: Implement the forward pass for the fully-connected net, computing  #
-        # the class scores for X and storing them in the scores variable.          #
-        #                                                                          #
-        # When using dropout, you'll need to pass self.dropout_param to each       #
-        # dropout forward pass.                                                    #
-        #                                                                          #
-        # When using batch normalization, you'll need to pass self.bn_params[0] to #
-        # the forward pass for the first batch normalization layer, pass           #
-        # self.bn_params[1] to the forward pass for the second batch normalization #
-        # layer, etc.                                                              #
-        ############################################################################
+############################################################################
+# TODO: Implement the forward pass for the fully-connected net, computing  #
+# the class scores for X and storing them in the scores variable.          #
+#                                                                          #
+# When using dropout, you'll need to pass self.dropout_param to each       #
+# dropout forward pass.                                                    #
+#                                                                          #
+# When using batch normalization, you'll need to pass self.bn_params[0] to #
+# the forward pass for the first batch normalization layer, pass           #
+# self.bn_params[1] to the forward pass for the second batch normalization #
+# layer, etc.                                                              #
+############################################################################
 
         cache_layer = {}
         inp = X.copy()
 
-        for i in range(self.num_layers):
+        for i in range(self.num_layers - 1):  # leave out final layer
 
+            # load parameters
             W = self.params['W{}'.format(i)]
             b = self.params['b{}'.format(i)]
 
-            if i < self.num_layers:
+            inp, cache_layer[i] = affine_relu_forward(inp, W, b)
 
-                inp, cache_layer[i] = affine_relu_forward(inp, W, b)
-                # batch norm here
-                # dropout here
+            # batch norm here
+            # dropout here
 
-            # Final Layer
-            else:
-                scores, cache_layer[i] = affine_forward(inp, W, b)
+        # Final Layer
+        i = self.num_layers - 1  # index of final layer
+
+        # load parameters
+        W = self.params['W{}'.format(i)]
+        b = self.params['b{}'.format(i)]
+
+        scores, cache_layer[i] = affine_forward(inp, W, b)
+
 
         # If test mode return early
         if mode == 'test':
@@ -285,7 +295,6 @@ class FullyConnectedNet(object):
 # automated tests, make sure that your L2 regularization includes a factor #
 # of 0.5 to simplify the expression for the gradient.                      #
 ############################################################################
-
         loss, dout = softmax_loss(scores, y)
 
         for i in reversed(range(self.num_layers)):
@@ -302,13 +311,10 @@ class FullyConnectedNet(object):
                 dx, dw, db = affine_relu_backward(dout, cache_layer[i])
 
             # Update grads
-            self.grads['W{}'.format(i)] = dw + self.reg * W
-            self.grads['b{}'.format(i)] = db
+            grads['W{}'.format(i)] = dw + self.reg * W
+            grads['b{}'.format(i)] = db
 
             # New upstream gradient
             dout = dx
-        ############################################################################
-        #                             END OF YOUR CODE                             #
-        ############################################################################
 
         return loss, grads
