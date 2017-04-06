@@ -162,7 +162,6 @@ def batchnorm_forward(x, gamma, beta, bn_param):
 
     out, cache = None, None
     if mode == 'train':
-        print()
 #############################################################################
 # TODO: Implement the training-time forward pass for batch normalization.   #
 # Use minibatch statistics to compute the mean and variance, use these      #
@@ -237,11 +236,17 @@ def batchnorm_backward(dout, cache):
     # TODO: Implement the backward pass for batch normalization. Store the      #
     # results in the dx, dgamma, and dbeta variables.                           #
     #############################################################################
-    N, D = dout.shape()
-    x_normalized, gamma, beta, std = cache
 
+    N = dout.shape[0]
+    x_normalized, gamma, std = cache
+
+    # out = gamma * x_normalized + beta
     dgamma = np.sum(dout * x_normalized, axis=0)
     dbeta = np.sum(dout, axis=0)
+    dx_normalized = dout * gamma
+
+    # ... Chain rule code... No Computational Graph, doing analytical gradient
+
     dx = gamma / (N * std) * (N * dout - x_normalized * dgamma - dbeta)
 
     return dx, dgamma, dbeta
@@ -269,7 +274,14 @@ def batchnorm_backward_alt(dout, cache):
     # should be able to compute gradients with respect to the inputs in a       #
     # single statement; our implementation fits on a single 80-character line.  #
     #############################################################################
-    pass
+
+    N = dout.shape[0]
+    x_normalized, gamma, std = cache
+
+    dgamma = np.sum(dout * x_normalized, axis=0)
+    dbeta = np.sum(dout, axis=0)
+    dx = gamma / (N * std) * (N * dout - x_normalized * dgamma - dbeta)
+
     #############################################################################
     #                             END OF YOUR CODE                              #
     #############################################################################
@@ -308,7 +320,9 @@ def dropout_forward(x, dropout_param):
         # TODO: Implement the training phase forward pass for inverted dropout.   #
         # Store the dropout mask in the mask variable.                            #
         ###########################################################################
-        pass
+
+        mask = np.random.choice([1, 0], size=x.shape, p=[p, 1 - p])
+
         ###########################################################################
         #                            END OF YOUR CODE                             #
         ###########################################################################
