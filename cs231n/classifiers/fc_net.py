@@ -1,4 +1,5 @@
 import numpy as np
+import numpy.random.randn as randn
 from cs231n.layers import *
 from cs231n.layer_utils import *
 
@@ -193,15 +194,21 @@ class FullyConnectedNet(object):
 
         for i, d_out in enumerate(layer_dimensions):
 
-            self.params['W{}'.format(i)] = weight_scale * np.random.randn(d_in, d_out)
+            self.params['W{}'.format(i)] = weight_scale * randn(d_in, d_out)
             self.params['b{}'.format(i)] = np.zeros(d_out)
+
+            if self.use_batchnorm:
+                self.params['gamma{}'.format(i)] = np.ones(d_out)
+                self.params['beta{}'.format(i)] = np.zeros(d_out)
             d_in = d_out
+
 
         # When using dropout we need to pass a dropout_param dictionary to each
         # dropout layer so that the layer knows the dropout probability and the mode
         # (train / test). You can pass the same dropout_param to each dropout layer.
 
         self.dropout_param = {}
+
         if self.use_dropout:
             self.dropout_param = {'mode': 'train', 'p': dropout}
             if seed is not None:
@@ -260,10 +267,18 @@ class FullyConnectedNet(object):
             # load parameters
             W = self.params['W{}'.format(i)]
             b = self.params['b{}'.format(i)]
+            g = self.params['gamma{}'.format(i)]
+            bt = self.params['beta{}'.format(i)]
 
-            inp, cache_layer[i] = affine_relu_forward(inp, W, b)
+            inp, relu_cache = affine_relu_forward(inp, W, b)
+            inp, norm_cache = batchnorm_forward(inp, g, bt, bn_param)
+            inp, drop_cache = dropout_forward(inp, self.dropout_param)
+
+            cache = relu_cache, norm_cache, drop_cache
+            cache_layer[i] = cache
 
             # batch norm here
+
             # dropout here
 
         # Final Layer
