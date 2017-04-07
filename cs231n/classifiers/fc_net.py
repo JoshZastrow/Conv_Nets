@@ -1,5 +1,4 @@
 import numpy as np
-import numpy.random.randn as randn
 from cs231n.layers import *
 from cs231n.layer_utils import *
 
@@ -123,6 +122,7 @@ class TwoLayerNet(object):
         grads['W1'] = dW1
         grads['b1'] = db1
 
+
         # Add Regularizatoin
         grads['W2'] += self.reg * W2
         grads['W1'] += self.reg * W1
@@ -194,7 +194,7 @@ class FullyConnectedNet(object):
 
         for i, d_out in enumerate(layer_dimensions):
 
-            self.params['W{}'.format(i)] = weight_scale * randn(d_in, d_out)
+            self.params['W{}'.format(i)] = weight_scale * np.random.randn(d_in, d_out)
             self.params['b{}'.format(i)] = np.zeros(d_out)
 
             if self.use_batchnorm:
@@ -267,14 +267,33 @@ class FullyConnectedNet(object):
             # load parameters
             W = self.params['W{}'.format(i)]
             b = self.params['b{}'.format(i)]
-            g = self.params['gamma{}'.format(i)]
-            bt = self.params['beta{}'.format(i)]
 
-            inp, relu_cache = affine_relu_forward(inp, W, b)
-            inp, norm_cache = batchnorm_forward(inp, g, bt, bn_param)
-            inp, drop_cache = dropout_forward(inp, self.dropout_param)
+            # Fully Connected layer
+            inp, affi_cache = affine_forward(inp, W, b)
 
-            cache = relu_cache, norm_cache, drop_cache
+            # Batch Norm
+            if self.use_batchnorm:
+                g = self.params['gamma{}'.format(i)]
+                bt = self.params['beta{}'.format(i)]
+                inp, norm_cache, bn = batchnorm_forward(inp, g, bt, bn_param[i])
+                bn_param[i] = bn  # update the running mean and var
+
+            # Drop Out
+            if self.use_dropout:
+                inp, drop_cache = dropout_forward(inp, self.dropout_param)
+
+            # Non Linearity Activation Function
+            inp, relu_cache = relu_forward(inp)
+
+            cache = {'affine': affi_cache,
+                     'relu': relu_cache}
+
+            if self.use_batchnorm:
+                cache['batchNorm'] = norm_cache,
+
+            if self.use_dropout:
+                cache['dropout'] = drop_cache,
+
             cache_layer[i] = cache
 
             # batch norm here
@@ -289,7 +308,6 @@ class FullyConnectedNet(object):
         b = self.params['b{}'.format(i)]
 
         scores, cache_layer[i] = affine_forward(inp, W, b)
-
 
         # If test mode return early
         if mode == 'test':
@@ -323,11 +341,25 @@ class FullyConnectedNet(object):
             if i == self.num_layers - 1:  # No Relu for last layer
                 dx, dw, db = affine_backward(dout, cache_layer[i])
             else:
-                dx, dw, db = affine_relu_backward(dout, cache_layer[i])
+
+                dx = relu_backward(dout, cache_layer[i]['relu'])
+
+                if self.use_dropout:
+                    dx = dropout_backward(dx, cache_layer[i]['dropout'])
+
+                if self.use_batchnorm:
+                    dx, dgamma, dbeta = batchnorm_backward(
+                        dx, cache_layer[i]['batchnorm'])
+
+                dx, dw, db = affine_backward(dx, cache_layer[i]['affine'])
 
             # Update grads
             grads['W{}'.format(i)] = dw + self.reg * W
             grads['b{}'.format(i)] = db
+
+            if self.use_batchnorm:
+                grads['gamma{}'.format(i)] = dgamma
+                grads['beta{}'.format(i)] = dbeta
 
             # New upstream gradient
             dout = dx

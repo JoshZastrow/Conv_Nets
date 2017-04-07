@@ -30,10 +30,26 @@ def affine_forward(x, w, b):
         x_s = x.reshape((N, D))
         out = x_s.dot(w) + b
 
-        #########################################################################
-        #                             END OF YOUR CODE                          #
-        #########################################################################
         cache = (x, w, b)
+        return out, cache
+
+def relu_forward(x):
+        """
+        Computes the forward pass for a layer of rectified linear units (ReLUs).
+
+        Input:
+        - x: Inputs, of any shape
+
+        Returns a tuple of:
+        - out: Output, of the same shape as x
+        - cache: x
+        """
+        out = None
+        #############################################################################
+        # TODO: Implement the ReLU forward pass.                                    #
+        #############################################################################
+        out = np.maximum(0, x)
+        cache = x
         return out, cache
 
 
@@ -69,27 +85,6 @@ def affine_backward(dout, cache):
         db = np.sum(dout, axis=0)
 
         return dx, dw, db
-
-
-def relu_forward(x):
-        """
-        Computes the forward pass for a layer of rectified linear units (ReLUs).
-
-        Input:
-        - x: Inputs, of any shape
-
-        Returns a tuple of:
-        - out: Output, of the same shape as x
-        - cache: x
-        """
-        out = None
-        #############################################################################
-        # TODO: Implement the ReLU forward pass.                                    #
-        #############################################################################
-        out = np.maximum(0, x)
-        cache = x
-        return out, cache
-
 
 def relu_backward(dout, cache):
         """
@@ -210,7 +205,7 @@ def batchnorm_forward(x, gamma, beta, bn_param):
     bn_param['running_mean'] = running_mean
     bn_param['running_var'] = running_var
 
-    return out, cache
+    return out, cache, bn_param
 
 
 def batchnorm_backward(dout, cache):
@@ -336,7 +331,7 @@ def dropout_forward(x, dropout_param):
         #                            END OF YOUR CODE                             #
         ###########################################################################
 
-    cache = (dropout_param, mask)
+    cache = dropout_param, mask
     out = out.astype(x.dtype, copy=False)
 
     return out, cache
@@ -350,7 +345,7 @@ def dropout_backward(dout, cache):
     - dout: Upstream derivatives, of any shape
     - cache: (dropout_param, mask) from dropout_forward.
     """
-    dropout_param, mask = cache
+    dropout_param, mask = cache[0]
     mode = dropout_param['mode']
 
     dx = None
