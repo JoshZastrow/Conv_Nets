@@ -219,6 +219,7 @@ class FullyConnectedNet(object):
         # normalization layer. You should pass self.bn_params[0] to the forward pass
         # of the first batch normalization layer, self.bn_params[1] to the forward
         # pass of the second batch normalization layer, etc.
+
         self.bn_params = []
         if self.use_batchnorm:
             self.bn_params = [{'mode': 'train'} for i in range(self.num_layers - 1)]
@@ -240,9 +241,10 @@ class FullyConnectedNet(object):
         # behave differently during training and testing.
         if self.dropout_param is not None:
             self.dropout_param['mode'] = mode
+
         if self.use_batchnorm:
             for bn_param in self.bn_params:
-                bn_param[mode] = mode
+                bn_param['mode'] = mode
 
         scores = None
 
@@ -275,8 +277,8 @@ class FullyConnectedNet(object):
             if self.use_batchnorm:
                 g = self.params['gamma{}'.format(i)]
                 bt = self.params['beta{}'.format(i)]
-                inp, norm_cache, bn = batchnorm_forward(inp, g, bt, bn_param[i])
-                bn_param[i] = bn  # update the running mean and var
+                inp, norm_cache = batchnorm_forward(inp, g, bt,
+                                                    self.bn_params[i])
 
             # Drop Out
             if self.use_dropout:
@@ -346,7 +348,7 @@ class FullyConnectedNet(object):
 
                 if self.use_dropout:
                     dx = dropout_backward(dx, cache_layer[i]['dropout'])
-
+                print('Using batchnorm? line 354')
                 if self.use_batchnorm:
                     dx, dgamma, dbeta = batchnorm_backward(
                         dx, cache_layer[i]['batchnorm'])
@@ -357,7 +359,7 @@ class FullyConnectedNet(object):
             grads['W{}'.format(i)] = dw + self.reg * W
             grads['b{}'.format(i)] = db
 
-            if self.use_batchnorm:
+            if self.use_batchnorm and i < (self.num_layers - 1):
                 grads['gamma{}'.format(i)] = dgamma
                 grads['beta{}'.format(i)] = dbeta
 

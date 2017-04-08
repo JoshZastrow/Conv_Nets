@@ -205,7 +205,7 @@ def batchnorm_forward(x, gamma, beta, bn_param):
     bn_param['running_mean'] = running_mean
     bn_param['running_var'] = running_var
 
-    return out, cache, bn_param
+    return out, cache
 
 
 def batchnorm_backward(dout, cache):
