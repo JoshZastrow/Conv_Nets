@@ -181,7 +181,7 @@ def batchnorm_forward(x, gamma, beta, bn_param):
         running_var = momentum * running_var + (1 - momentum) * sample_var
 
         out = gamma * x_normalized + beta
-        cache = x_normalized, gamma, sample_std
+        cache = x_normalized, gamma, beta, sample_std
 
     elif mode == 'test':
 
@@ -196,7 +196,7 @@ def batchnorm_forward(x, gamma, beta, bn_param):
         x_normalized = (x - running_mean) / running_std
 
         out = gamma * x_normalized + beta
-        cache = x_normalized, gamma, running_std
+        cache = x_normalized, gamma, beta, running_std
 
     else:
         raise ValueError('Invalid forward batchnorm mode "{}"'.format(mode))
@@ -233,7 +233,7 @@ def batchnorm_backward(dout, cache):
     #############################################################################
 
     N = dout.shape[0]
-    x_normalized, gamma, std = cache
+    x_normalized, gamma, beta, std = cache
 
     # out = gamma * x_normalized + beta
     dgamma = np.sum(dout * x_normalized, axis=0)

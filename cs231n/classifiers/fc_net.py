@@ -197,7 +197,7 @@ class FullyConnectedNet(object):
             self.params['W{}'.format(i)] = weight_scale * np.random.randn(d_in, d_out)
             self.params['b{}'.format(i)] = np.zeros(d_out)
 
-            if self.use_batchnorm:
+            if self.use_batchnorm and i < (self.num_layers - 1):
                 self.params['gamma{}'.format(i)] = np.ones(d_out)
                 self.params['beta{}'.format(i)] = np.zeros(d_out)
             d_in = d_out
@@ -221,8 +221,9 @@ class FullyConnectedNet(object):
         # pass of the second batch normalization layer, etc.
 
         self.bn_params = []
+
         if self.use_batchnorm:
-            self.bn_params = [{'mode': 'train'} for i in range(self.num_layers - 1)]
+            self .bn_params = [{'mode': 'train'} for i in range(self.num_layers - 1)]
 
         # Cast all parameters to the correct datatype
         for k, v in self.params.items():
@@ -264,52 +265,41 @@ class FullyConnectedNet(object):
         cache_layer = {}
         inp = X.copy()
 
-        for i in range(self.num_layers - 1):  # leave out final layer
+        for i in range(self.num_layers):
 
-            # load parameters
-            W = self.params['W{}'.format(i)]
-            b = self.params['b{}'.format(i)]
+            if i < (self.num_layers - 1):  # leave out final layer
+                # load parameters
+                W = self.params['W{}'.format(i)]
+                b = self.params['b{}'.format(i)]
 
-            # Fully Connected layer
-            inp, affi_cache = affine_forward(inp, W, b)
+                # Fully Connected layer
+                inp, fc_cache = affine_forward(inp, W, b)
+                cache_layer['fc{}'.format(i)] = fc_cache
 
-            # Batch Norm
-            if self.use_batchnorm:
-                g = self.params['gamma{}'.format(i)]
-                bt = self.params['beta{}'.format(i)]
-                inp, norm_cache = batchnorm_forward(inp, g, bt,
-                                                    self.bn_params[i])
+                # Batch Norm layer
+                if self.use_batchnorm:
+                    g = self.params['gamma{}'.format(i)]
+                    bt = self.params['beta{}'.format(i)]
+                    inp, bn_cache = batchnorm_forward(inp, g, bt,
+                                                      self.bn_params[i])
+                    cache_layer['bn{}'.format(i)] = bn_cache
 
-            # Drop Out
-            if self.use_dropout:
-                inp, drop_cache = dropout_forward(inp, self.dropout_param)
+                # Drop Out layer
+                if self.use_dropout:
+                    inp, drop_cache = dropout_forward(inp, self.dropout_param)
+                    cache_layer['drop{}'.format(i)] = drop_cache
 
-            # Non Linearity Activation Function
-            inp, relu_cache = relu_forward(inp)
+                # Non Linearity Activation Function
+                inp, relu_cache = relu_forward(inp)
+                cache_layer['relu{}'.format(i)] = relu_cache
 
-            cache = {'affine': affi_cache,
-                     'relu': relu_cache}
+            else:  # Final Layer
 
-            if self.use_batchnorm:
-                cache['batchNorm'] = norm_cache,
-
-            if self.use_dropout:
-                cache['dropout'] = drop_cache,
-
-            cache_layer[i] = cache
-
-            # batch norm here
-
-            # dropout here
-
-        # Final Layer
-        i = self.num_layers - 1  # index of final layer
-
-        # load parameters
-        W = self.params['W{}'.format(i)]
-        b = self.params['b{}'.format(i)]
-
-        scores, cache_layer[i] = affine_forward(inp, W, b)
+                # load parameters
+                W = self.params['W{}'.format(i)]
+                b = self.params['b{}'.format(i)]
+                scores, fc_cache = affine_forward(inp, W, b)
+                cache_layer['fc{}'.format(i)] = fc_cache
 
         # If test mode return early
         if mode == 'test':
@@ -334,32 +324,35 @@ class FullyConnectedNet(object):
 
         for i in reversed(range(self.num_layers)):
 
-            # Retrieve the weights and bias
+            # Retrieve the weights for reg loss
             W = self.params['W{}'.format(i)]
-            b = self.params['b{}'.format(i)]
-
             loss += 0.5 * self.reg * np.sum(W ** 2)
 
-            if i == self.num_layers - 1:  # No Relu for last layer
-                dx, dw, db = affine_backward(dout, cache_layer[i])
-            else:
+            if i == self.num_layers - 1:  # Last Layer
+                dx, dw, db = affine_backward(
+                    dout, cache_layer['fc{}'.format(i)])
 
-                dx = relu_backward(dout, cache_layer[i]['relu'])
+            else:  # Relu, dropout, batchNorm, fully connected backprop
+                dx = relu_backward(
+                    dout, cache_layer['relu{}'.format(i)])
 
                 if self.use_dropout:
-                    dx = dropout_backward(dx, cache_layer[i]['dropout'])
-                print('Using batchnorm? line 354')
+                    dx = dropout_backward(
+                        dx, cache_layer['drop{}'.format(i)])
+
                 if self.use_batchnorm:
                     dx, dgamma, dbeta = batchnorm_backward(
-                        dx, cache_layer[i]['batchnorm'])
+                        dx, cache_layer['bn{}'.format(i)])
 
-                dx, dw, db = affine_backward(dx, cache_layer[i]['affine'])
+                dx, dw, db = affine_backward(
+                    dx, cache_layer['fc{}'.format(i)])
 
             # Update grads
             grads['W{}'.format(i)] = dw + self.reg * W
             grads['b{}'.format(i)] = db
 
-            if self.use_batchnorm and i < (self.num_layers - 1):
+            # BatchNorm grads
+            if self.use_batchnorm and i < self.num_layers - 1:
                 grads['gamma{}'.format(i)] = dgamma
                 grads['beta{}'.format(i)] = dbeta
 
