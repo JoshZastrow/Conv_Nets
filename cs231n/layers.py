@@ -238,7 +238,7 @@ def batchnorm_backward(dout, cache):
     # out = gamma * x_normalized + beta
     dgamma = np.sum(dout * x_normalized, axis=0)
     dbeta = np.sum(dout, axis=0)
-    dx_normalized = dout * gamma
+    # dx_normalized = dout * gamma
 
     # ... Chain rule code... No Computational Graph, doing analytical gradient
 
@@ -371,8 +371,8 @@ def conv_forward_naive(x, w, b, conv_param):
     all C channels and has height HH and width HH.
 
     Input:
-    - x: Input data of shape (N, C, H, W)
-    - w: Filter weights of shape (F, C, HH, WW)
+    - x: Input data of shape (N, C, H, W) -> N examples of H x W x C
+    - w: Filter weights of shape (F, C, HH, WW) -> F filters of HH x WW x C
     - b: Biases, of shape (F,)
     - conv_param: A dictionary with the following keys:
         - 'stride': The number of pixels between adjacent receptive fields in the
@@ -390,7 +390,40 @@ def conv_forward_naive(x, w, b, conv_param):
     # TODO: Implement the convolutional forward pass.                           #
     # Hint: you can use the function np.pad for padding.                        #
     #############################################################################
-    pass
+    P = conv_param['pad']
+    S = conv_param['stride']
+    N, C, H, W = x.shape
+    F = w.shape[0]  # Filter size
+
+    # Add Padding
+    for channel in range(C):
+        np.pad(x[:,channel, :, :], P, mode='constant')
+        print(x[1, channel])
+
+    # Output layer spatial dimensions
+    H_output_size = 1 + (H + 2 * P - F) // S
+    W_output_size = 1 + (W + 2 * P - F) // S
+    out = np.zeros(shape=(N, F, H_output_size, W_output_size))
+
+    for f_i in range(F):
+        for w_i in range(W_output_size):
+            for h_i in range(H_output_size):
+
+                pass
+
+
+    # For each Wpoint in Wout
+    #   For each Hpoint in Hout
+    #       For each FilterParameter filter
+    #           take filter segment of X
+    #           take filter segment of W
+    #           multiply these together
+    #           sum the product
+    #           add a bias value
+    #           assign to Output[FilterParameter, Wpoint, Hpoint]
+    #       move the filter location horizontally
+    #   move the filter location vertically
+
     #############################################################################
     #                             END OF YOUR CODE                              #
     #############################################################################
