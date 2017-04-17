@@ -390,15 +390,15 @@ def conv_forward_naive(x, w, b, conv_param):
     # TODO: Implement the convolutional forward pass.                           #
     # Hint: you can use the function np.pad for padding.                        #
     #############################################################################
+
     P = conv_param['pad']
     S = conv_param['stride']
     N, C, H, W = x.shape
     F = w.shape[0]  # Filter size
 
     # Add Padding
-    for channel in range(C):
-        np.pad(x[:,channel, :, :], P, mode='constant')
-        print(x[1, channel])
+    pad_spatial_sides = ((0, 0), (0, 0), (P, P), (P, P))
+    x = np.pad(x, pad_spatial_sides, mode='constant')
 
     # Output layer spatial dimensions
     H_output_size = 1 + (H + 2 * P - F) // S

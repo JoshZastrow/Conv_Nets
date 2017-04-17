@@ -1,6 +1,7 @@
 import numpy as np
 from  layers import *
 
+np.set_printoptions(precision=3)
 x_shape = (2, 3, 4, 4)
 w_shape = (3, 3, 4, 4)
 x = np.linspace(-0.1, 0.5, num=np.prod(x_shape)).reshape(x_shape)
