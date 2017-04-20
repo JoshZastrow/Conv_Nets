@@ -157,19 +157,19 @@ def batchnorm_forward(x, gamma, beta, bn_param):
 
     out, cache = None, None
     if mode == 'train':
-#############################################################################
-# TODO: Implement the training-time forward pass for batch normalization.   #
-# Use minibatch statistics to compute the mean and variance, use these      #
-# statistics to normalize the incoming data, and scale and shift the        #
-# normalized data using gamma and beta.                                     #
-#                                                                           #
-# You should store the output in the variable out. Any intermediates that   #
-# you need for the backward pass should be stored in the cache variable.    #
-#                                                                           #
-# You should also use your computed sample mean and variance together with  #
-# the momentum variable to update the running mean and running variance,    #
-# storing your result in the running_mean and running_var variables.        #
-#############################################################################
+    #############################################################################
+    # TODO: Implement the training-time forward pass for batch normalization.   #
+    # Use minibatch statistics to compute the mean and variance, use these      #
+    # statistics to normalize the incoming data, and scale and shift the        #
+    # normalized data using gamma and beta.                                     #
+    #                                                                           #
+    # You should store the output in the variable out. Any intermediates that   #
+    # you need for the backward pass should be stored in the cache variable.    #
+    #                                                                           #
+    # You should also use your computed sample mean and variance together with  #
+    # the momentum variable to update the running mean and running variance,    #
+    # storing your result in the running_mean and running_var variables.        #
+    #############################################################################
 
         sample_mean = (1 / N) * np.sum(x, axis=0)
         sample_var = (1 / N) * np.sum((x - sample_mean) ** 2, axis=0)
@@ -391,49 +391,49 @@ def conv_forward_naive(x, w, b, conv_param):
     # Hint: you can use the function np.pad for padding.                    #
     ###################################################################
 
+    # Input parameters
     P = conv_param['pad']
     S = conv_param['stride']
     N, C, H, W = x.shape
-    F = w.shape[0]  # Filter size
+    F, C, HH, WW = w.shape
+
+    # Check Dimensions
+    assert (H + 2 * P - HH) % S == 0
+    assert (W + 2 * P - WW) % S == 0
 
     # Add Padding
     pad_spatial_sides = ((0, 0), (0, 0), (P, P), (P, P))
     x = np.pad(x, pad_spatial_sides, mode='constant')
 
     # Output layer spatial dimensions
-    H_output_size = 1 + (H + 2 * P - F) // S
-    W_output_size = 1 + (W + 2 * P - F) // S
-    out = np.zeros(shape=(N, F, H_output_size, W_output_size))
+    assert (H + 2 * P - HH) % S == 0
+    out_width = 1 + (W + 2 * P - WW) // S
+    out_height = 1 + (H + 2 * P - HH) // S
+    out = np.zeros(shape=(N, F, out_height, out_width))
 
-    for f_i in range(F):
-        for w_i in range(W_output_size):
+    # Iteration objects
+    all_samples = range(N)
+    all_filters = range(F)
 
-            w_subset = range(w_i * F, (w_i + 1) * F)
+    for i in all_samples:
 
-            for h_i in range(H_output_size):
+        h_out = 0
 
-                h_subset = range(h_i * F, (h_i + 1) * F)
-                print(x)
-                x_mask = x[:, :, h_subset, w_subset]
-                print('x subset: \n', x_mask)
-                pass
+        for h_pos in range(0, W - WW + 1, S):  # window height start locations
 
+            w_out = 0
 
-    # For each Wpoint in Wout
-    #   For each Hpoint in Hout
-    #       For each FilterParameter filter
-    #           take filter segment of X
-    #           take filter segment of W
-    #           multiply these together
-    #           sum the product
-    #           add a bias value
-    #           assign to Output[FilterParameter, Wpoint, Hpoint]
-    #       move the filter location horizontally
-    #   move the filter location vertically
+            for w_pos in range(0, H - HH + 1, S):  # window width start locations
 
-    #############################################################################
-    #                             END OF YOUR CODE                              #
-    #############################################################################
+                for f_layer in all_filters:
+
+                    x_window = x[i, :, h_pos:h_pos + HH, w_pos:w_pos + WW]
+
+                    out[i, f_layer, h_out, w_out] = np.sum(x_window * w[i]) + b[i]
+
+                w_out += 1
+            h_out += 1
+
     cache = (x, w, b, conv_param)
     return out, cache
 
@@ -478,7 +478,7 @@ def max_pool_forward_naive(x, pool_param):
     - cache: (x, pool_param)
     """
     out = None
-    ##################################################################################
+    #############################################################################
     # TODO: Implement the max pooling forward pass                              #
     #############################################################################
     pass
