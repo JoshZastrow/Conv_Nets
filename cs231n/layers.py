@@ -412,23 +412,20 @@ def conv_forward_naive(x, w, b, conv_param):
     x = np.pad(x, pad_spatial_sides, mode='constant', constant_values=0)
     H, W = x.shape[2:]
 
-    # Iteration objects
-    all_samples = range(N)
-    all_filters = range(F)
-
-    for i in all_samples:
+    # For each example, for each height index, for each width index, for each filter
+    for i in range(N):
 
         h_out = 0
 
-        for h_pos in range(0, H - HH + 1, S):  # window height start locations
+        for h_pos in range(0, H - HH + 1, S):
 
             w_out = 0
 
-            for w_pos in range(0, W - WW + 1, S):  # window width start locations
+            for w_pos in range(0, W - WW + 1, S):
 
                 x_window = x[i, :, h_pos:h_pos + HH, w_pos:w_pos + WW]
 
-                for f in all_filters:
+                for f in range(F):
 
                     out[i, f, h_out, w_out] = np.sum(x_window * w[f]) + b[f]
 
@@ -453,14 +450,48 @@ def conv_backward_naive(dout, cache):
     - dw: Gradient with respect to w
     - db: Gradient with respect to b
     """
+
     dx, dw, db = None, None, None
     #############################################################################
     # TODO: Implement the convolutional backward pass.                          #
     #############################################################################
-    pass
-    #############################################################################
-    #                             END OF YOUR CODE                              #
-    #############################################################################
+
+    # Read in cache:
+    x, w, b, conv_param = cache
+    S = conv_param['stride']
+    P = conv_param['pad']
+
+    # Get dimensions
+    N, C, H, W = x.shape
+    F, C, HH, WW = w.shape
+
+    # Allocate memory
+    dx = np.zeros_like(x)
+    dw = np.zeros_like(w)
+    db = np.zeros_like(b)
+
+    for i in range(N):
+
+        h_out = 0
+
+        for h_pos in range(0, H - HH + 1, S):
+
+            w_out = 0
+
+            for w_pos in range(0, W - WW + 1, S):
+
+                x_window = x[i, :, h_pos:h_pos + HH, w_pos:w_pos + WW]
+
+                for f in range(F):
+
+                    dx = dout.dot(w[f].T)
+                    dw = (x_window.T).dot(dout)
+                    db = np.sum(dout)
+
+                w_out += 2
+
+            h_out += 1
+
     return dx, dw, db
 
 
