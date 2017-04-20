@@ -401,15 +401,16 @@ def conv_forward_naive(x, w, b, conv_param):
     assert (H + 2 * P - HH) % S == 0
     assert (W + 2 * P - WW) % S == 0
 
-    # Add Padding
-    pad_spatial_sides = ((0, 0), (0, 0), (P, P), (P, P))
-    x = np.pad(x, pad_spatial_sides, mode='constant')
-
     # Output layer spatial dimensions
     assert (H + 2 * P - HH) % S == 0
     out_width = 1 + (W + 2 * P - WW) // S
     out_height = 1 + (H + 2 * P - HH) // S
-    out = np.zeros(shape=(N, F, out_height, out_width))
+    out = np.zeros((N, F, out_height, out_width))
+
+    # Add Padding
+    pad_spatial_sides = ((0, 0), (0, 0), (P, P), (P, P))
+    x = np.pad(x, pad_spatial_sides, mode='constant', constant_values=0)
+    H, W = x.shape[2:]
 
     # Iteration objects
     all_samples = range(N)
@@ -419,19 +420,20 @@ def conv_forward_naive(x, w, b, conv_param):
 
         h_out = 0
 
-        for h_pos in range(0, W - WW + 1, S):  # window height start locations
+        for h_pos in range(0, H - HH + 1, S):  # window height start locations
 
             w_out = 0
 
-            for w_pos in range(0, H - HH + 1, S):  # window width start locations
+            for w_pos in range(0, W - WW + 1, S):  # window width start locations
 
-                for f_layer in all_filters:
+                x_window = x[i, :, h_pos:h_pos + HH, w_pos:w_pos + WW]
 
-                    x_window = x[i, :, h_pos:h_pos + HH, w_pos:w_pos + WW]
+                for f in all_filters:
 
-                    out[i, f_layer, h_out, w_out] = np.sum(x_window * w[i]) + b[i]
+                    out[i, f, h_out, w_out] = np.sum(x_window * w[f]) + b[f]
 
                 w_out += 1
+
             h_out += 1
 
     cache = (x, w, b, conv_param)

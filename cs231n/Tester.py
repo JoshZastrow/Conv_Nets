@@ -3,10 +3,10 @@ from layers import *
 from im2col import *
 import sys
 
-np.set_printoptions(precision=3)
+np.set_printoptions(precision=4)
 
 sys.exit
-x_shape = (2, 3, 16, 16)
+x_shape = (2, 3, 4, 4)
 w_shape = (3, 3, 4, 4)
 x = np.linspace(-0.1, 0.5, num=np.prod(x_shape)).reshape(x_shape)
 print(x[0].shape)
