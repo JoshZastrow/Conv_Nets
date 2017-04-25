@@ -464,15 +464,12 @@ def conv_backward_naive(dout, cache):
     # H_out = (H + 2 * P - HH) // S + 1
     # W_out = (W + 2 * P - WW) // S + 1
 
-    # Pad x with zeros:
-    padding = ((0, 0), (0, 0), (P, P), (P, P))
-    x = np.pad(x, padding, mode='constant', constant_values=0)
-
     # Allocate memory
     dx = np.zeros_like(x)
     dw = np.zeros_like(w)
     db = np.zeros_like(b)
     # backprop through X and W
+
     for i in range(N):
         h_out = 0
 
@@ -486,10 +483,13 @@ def conv_backward_naive(dout, cache):
                 dx[i, :, spatial['h'], spatial['w']] += \
                     np.sum(w * dout[i, :, h_out, w_out][:, None, None, None], axis=0)
 
-                x_window = x[i, :, spatial['h'], spatial['w']]
-                for f in range(F):
-                    dout_window = dout[i, f, h_out, w_out]
-                    dw[f, :, :, :] += np.sum(x_window * dout_window, axis=0)
+                # Calculate dx only once
+                if i == 1:
+                    x_window = x[:, :, spatial['h'], spatial['w']]
+
+                    for f in range(F):
+                        dout_window = dout[:, f, h_out, w_out][:, None, None, None]
+                        dw[f, :, :, :] += np.sum(x_window * dout_window, axis=0)
 
                 w_out += 1
             h_out += 1
