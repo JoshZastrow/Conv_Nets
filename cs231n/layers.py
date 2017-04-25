@@ -414,23 +414,18 @@ def conv_forward_naive(x, w, b, conv_param):
 
     # For each example, for each height index, for each width index, for each filter
     for i in range(N):
-
         h_out = 0
 
         for h_pos in range(0, H - HH + 1, S):
-
             w_out = 0
 
             for w_pos in range(0, W - WW + 1, S):
-
                 x_window = x[i, :, h_pos:h_pos + HH, w_pos:w_pos + WW]
 
                 for f in range(F):
-
                     out[i, f, h_out, w_out] = np.sum(x_window * w[f]) + b[f]
 
                 w_out += 1
-
             h_out += 1
 
     cache = (x, w, b, conv_param)
@@ -466,32 +461,44 @@ def conv_backward_naive(dout, cache):
     F, C, HH, WW = w.shape
 
     # Get spatial output dimensions
-    H_out = (H + 2 * P - HH) // S + 1
-    W_out = (W + 2 * P - WW) // S + 1
+    # H_out = (H + 2 * P - HH) // S + 1
+    # W_out = (W + 2 * P - WW) // S + 1
+
+    # Pad x with zeros:
+    padding = ((0, 0), (0, 0), (P, P), (P, P))
+    x = np.pad(x, padding, mode='constant', constant_values=0)
 
     # Allocate memory
     dx = np.zeros_like(x)
     dw = np.zeros_like(w)
     db = np.zeros_like(b)
+    # backprop through X and W
+    for i in range(N):
+        h_out = 0
+
+        for h_pos in range(0, H - HH + 1, S):
+            w_out = 0
+
+            for w_pos in range(0, W - WW + 1, S):
+                spatial = {'h': slice(h_pos, h_pos + HH),
+                           'w': slice(w_pos, w_pos + WW)}
+
+                dx[i, :, spatial['h'], spatial['w']] += \
+                    np.sum(w * dout[i, :, h_out, w_out][:, None, None, None], axis=0)
+
+                x_window = x[i, :, spatial['h'], spatial['w']]
+                for f in range(F):
+                    dout_window = dout[i, f, h_out, w_out]
+                    dw[f, :, :, :] += np.sum(x_window * dout_window, axis=0)
+
+                w_out += 1
+            h_out += 1
 
     # Calculate db:
     db = np.sum(dout, axis=(0, 2, 3))
 
-    print('Shape of input:\n\tDout --> {}'
-          '\n\tdb sum of axis 0, 2, 3 shape --> {}'
-          .format(dout.shape, db.shape))
-    # dx
-    for i in range(N):
-
-        for h_pos in range(0, H - HH + 1, S):
-            for w_pos in range(0, W - WW + 1, S):
-                for f in range(F):
-
-                    dx[i] = dout[i, :, h_pos, w_pos] =
-
-                w_out += 2
-
-            h_out += 1
+    # Remove Padding
+    dx = dx[:, :, P:-P, P:-P]
 
     return dx, dw, db
 
