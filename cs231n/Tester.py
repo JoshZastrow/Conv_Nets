@@ -16,4 +16,5 @@ conv_param = {'stride': 2, 'pad': 1}
 d, cche = conv_forward_naive(x, w, b, conv_param)
 dx, dw, db = conv_backward_naive(d, cche)
 print(d)
-print(d.shape)
+print((d > -0.0876) * -0.0876)
+

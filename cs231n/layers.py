@@ -366,9 +366,9 @@ def conv_forward_naive(x, w, b, conv_param):
     """
     A naive implementation of the forward pass for a convolutional layer.
 
-    The input consists of N data points, each with C channels, height H and width
+    The input consists of N data points, each with C chs, height H and width
     W. We convolve each input with F different filters, where each filter spans
-    all C channels and has height HH and width HH.
+    all C chs and has height HH and width HH.
 
     Input:
     - x: Input data of shape (N, C, H, W) -> N examples of H x W x C
@@ -526,26 +526,31 @@ def max_pool_forward_naive(x, pool_param):
     filter_h = pool_param['pool_height']
     filter_w = pool_param['pool_width']
     stride = pool_param['stride']
-    N, C, H, W = x.shape()
+    N, C, H, W = x.shape
 
-    for c in range(C):
-        h_out = 0
+    # Get spatial output dimensions
+    H_out = (H - filter_h) // stride + 1
+    W_out = (W - filter_w) // stride + 1
 
-        for h_pos in range(0, H - filter_h + 1, stride):
-            w_out = 0
+    out = np.zeros(shape=(N, C, H_out, W_out))
 
-            for w_pos in range(0, W - filter_w + 1, stride):
-                spatial = {'h': slice(h_pos, h_pos + filter_h + 1),
-                           'w': slice(w_pos, w_pos + filter_w + 1)}
+    for ex in range(N):
 
-                out[:, c, h_out, w_out] = np.max(x[:, c, spatial['h'], spatial['w']],
-                                                 axis=0)
+        for ch in range(C):
+            h_out = 0
 
+            for h_pos in range(0, H - filter_h + 1, stride):
+                w_out = 0
 
+                for w_pos in range(0, W - filter_w + 1, stride):
+                    window = {'h': slice(h_pos, h_pos + filter_h),
+                              'w': slice(w_pos, w_pos + filter_w)}
 
-    #############################################################################
-    #                             END OF YOUR CODE                              #
-    #############################################################################
+                    out[ex, ch, h_out, w_out] = np.max(
+                        x[ex, ch, window['h'], window['w']])
+                    w_out += 1
+                h_out += 1
+
     cache = (x, pool_param)
     return out, cache
 
@@ -565,10 +570,41 @@ def max_pool_backward_naive(dout, cache):
     #############################################################################
     # TODO: Implement the max pooling backward pass                             #
     #############################################################################
-    pass
-    #############################################################################
-    #                             END OF YOUR CODE                              #
-    #############################################################################
+
+    # Read in paramaters
+    x, pool_param = cache
+    filter_h = pool_param['pool_height']
+    filter_w = pool_param['pool_width']
+    stride = pool_param['stride']
+
+    # N examples, C channels, H frame height, W frame width
+    N, C, H_out, W_out = dout.shape
+    N, C, H, W = x.shape
+
+    dx = np.zeros_like(x)
+
+    for ex in range(N):
+
+        for ch in range(C):
+            h_out = 0
+
+            for h_pos in range(0, H - filter_h + 1, stride):
+                w_out = 0
+
+                for w_pos in range(0, W - filter_w + 1, stride):
+                    # height and width of filter window segment
+                    s = {'h': slice(h_pos, h_pos + filter_h),
+                         'w': slice(w_pos, w_pos + filter_w)}
+
+                    x_window = x[ex, ch, s['h'], s['w']]
+
+                    mx = np.max(x_window)
+
+                    dx[ex, ch, s['h'], s['w']] += (x_window == mx) * dout[ex, ch, h_out, w_out]
+
+                    w_out += 1
+
+                h_out += 1
     return dx
 
 
