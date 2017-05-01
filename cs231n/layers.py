@@ -593,14 +593,13 @@ def max_pool_backward_naive(dout, cache):
 
                 for w_pos in range(0, W - filter_w + 1, stride):
                     # height and width of filter window segment
-                    s = {'h': slice(h_pos, h_pos + filter_h),
-                         'w': slice(w_pos, w_pos + filter_w)}
+                    h = slice(h_pos, h_pos + filter_h)
+                    w = slice(w_pos, w_pos + filter_w)
 
-                    x_window = x[ex, ch, s['h'], s['w']]
-
+                    x_window = x[ex, ch, h, w]
                     mx = np.max(x_window)
 
-                    dx[ex, ch, s['h'], s['w']] += (x_window == mx) * dout[ex, ch, h_out, w_out]
+                    dx[ex, ch, h, w] += (x_window == mx) * dout[ex, ch, h_out, w_out]
 
                     w_out += 1
 
