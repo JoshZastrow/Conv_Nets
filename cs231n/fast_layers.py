@@ -49,7 +49,7 @@ def conv_forward_strides(x, w, b, conv_param):
     assert (H + 2 * pad - HH) % stride == 0, 'height does not work'
 
     # Pad the input
-    p = pad
+    p = int(pad)
     x_padded = np.pad(x, ((0, 0), (0, 0), (p, p), (p, p)), mode='constant')
 
     # Figure out output dimensions

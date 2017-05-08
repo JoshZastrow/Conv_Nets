@@ -1,3 +1,5 @@
+
+
 import numpy as np
 
 from cs231n.layers import *
@@ -64,9 +66,9 @@ class ThreeLayerConvNet(object):
         self.params['W3'] = weight_scale * np.random.randn(
             hidden_dim, num_classes)
 
-        self.params['b1'] = np.zeros_like(num_filters)  # self.params['W1'])
-        self.params['b2'] = np.zeros_like(hidden_dim)  # self.params['W2'])
-        self.params['b3'] = np.zeros_like(num_classes)  # self.params['W3'])
+        self.params['b1'] = np.zeros(num_filters)  # self.params['W1'])
+        self.params['b2'] = np.zeros(hidden_dim)  # self.params['W2'])
+        self.params['b3'] = np.zeros(num_classes)  # self.params['W3'])
 
         ############################################################################
         #                             END OF YOUR CODE                             #
@@ -93,6 +95,7 @@ class ThreeLayerConvNet(object):
         pool_param = {'pool_height': 2, 'pool_width': 2, 'stride': 2}
 
         scores = None
+
         ############################################################################
         # TODO: Implement the forward pass for the three-layer convolutional net,  #
         # computing the class scores for X and storing them in the scores          #
@@ -139,6 +142,3 @@ class ThreeLayerConvNet(object):
         ############################################################################
 
         return loss, grads
-
-
-pass
