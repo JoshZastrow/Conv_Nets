@@ -50,7 +50,7 @@ class ThreeLayerConvNet(object):
 
         # Store parameter variables
         input_channels, input_H, input_W = input_dim
-        max_pool_dim = input_H * input_W / 4 * num_filters
+        max_pool_dim = input_H * input_W // 4 * num_filters
 
         # Convolutional Layer
         self.params['W1'] = weight_scale * np.random.randn(
@@ -73,7 +73,7 @@ class ThreeLayerConvNet(object):
         ############################################################################
 
         for k, v in self.params.items():
-                self.params[k] = v.astype(dtype)
+            self.params[k] = v.astype(dtype)
 
     def loss(self, X, y=None):
         """
@@ -98,11 +98,10 @@ class ThreeLayerConvNet(object):
         # computing the class scores for X and storing them in the scores          #
         # variable.                                                                #
         ############################################################################
-        crp_out, crp_cache = conv_relu_pool_forward(X, W1, b1,
-                                                    conv_param, pool_param)
-        fc1_out, fc1_cache = affine_relu_forward(crp_out, W2, b2)
-        fc2_out, fc2_cache = affine_forward(fc1_out, W3, b3)
-        scores = fc2_out
+        X1, X_cache = conv_relu_pool_forward(X, W1, b1, conv_param, pool_param)
+        X2, X1_cache = affine_relu_forward(X1, W2, b2)
+        scores, X2_cache = affine_forward(X2, W3, b3)
+
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################
@@ -120,11 +119,20 @@ class ThreeLayerConvNet(object):
         ############################################################################
 
         # Data loss
-        loss, dx = softmax_loss(fc2_out, y)
+        loss, dx = softmax_loss(scores, y)
 
         # Regularization term
         for i in range(1, 4):
             loss += 0.5 * self.reg * np.sum(self.params['W{}'.format(i)] ** 2)
+
+        # backprop output
+        dX3, grads['W3'], grads['b3'] = affine_backward(dx, X2_cache)
+        dX2, grads['W2'], grads['b2'] = affine_relu_backward(dX3, X1_cache)
+        dX1, grads['W1'], grads['b1'] = conv_relu_pool_backward(dX2, X_cache)
+
+        # Regularization term
+        for i in range(1, 4):
+            grad['W{}'.format(i)] += self.reg * self.params['W{}'.format(i)]
 
         ############################################################################
         #                             END OF YOUR CODE                             #

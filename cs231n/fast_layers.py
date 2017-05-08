@@ -55,8 +55,8 @@ def conv_forward_strides(x, w, b, conv_param):
     # Figure out output dimensions
     H += 2 * pad
     W += 2 * pad
-    out_h = (H - HH) / stride + 1
-    out_w = (W - WW) / stride + 1
+    out_h = (H - HH) // stride + 1
+    out_w = (W - WW) // stride + 1
 
     # Perform an im2col operation by picking clever strides
     shape = (C, HH, WW, N, out_h, out_w)
@@ -65,7 +65,7 @@ def conv_forward_strides(x, w, b, conv_param):
     x_stride = np.lib.stride_tricks.as_strided(x_padded,
                                                shape=shape, strides=strides)
     x_cols = np.ascontiguousarray(x_stride)
-    x_cols.shape = (C * HH * WW, N * out_h * out_w)
+    x_cols.shape = (int(C * HH * WW), int(N * out_h * out_w))
 
     # Now all our convolutions are a big matrix multiply
     res = w.reshape(F, -1).dot(x_cols) + b.reshape(-1, 1)
@@ -182,8 +182,8 @@ def max_pool_forward_reshape(x, pool_param):
     assert pool_height == pool_width == stride, 'Invalid pool params'
     assert H % pool_height == 0
     assert W % pool_height == 0
-    x_reshaped = x.reshape(N, C, H / pool_height, pool_height,
-                                                 W / pool_width, pool_width)
+    x_reshaped = x.reshape(N, C, H // pool_height, pool_height,
+                           W // pool_width, pool_width)
     out = x_reshaped.max(axis=3).max(axis=4)
 
     cache = (x, x_reshaped, out)
@@ -264,7 +264,7 @@ def max_pool_backward_im2col(dout, cache):
     dx_cols = np.zeros_like(x_cols)
     dx_cols[x_cols_argmax, np.arange(dx_cols.shape[1])] = dout_reshaped
     dx = col2im_indices(dx_cols, (N * C, 1, H, W), pool_height, pool_width,
-                            padding=0, stride=stride)
+                        padding=0, stride=stride)
     dx = dx.reshape(x.shape)
 
     return dx
