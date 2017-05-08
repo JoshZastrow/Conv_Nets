@@ -132,7 +132,7 @@ class ThreeLayerConvNet(object):
 
         # Regularization term
         for i in range(1, 4):
-            grad['W{}'.format(i)] += self.reg * self.params['W{}'.format(i)]
+            grads['W{}'.format(i)] += self.reg * self.params['W{}'.format(i)]
 
         ############################################################################
         #                             END OF YOUR CODE                             #
