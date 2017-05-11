@@ -2,110 +2,112 @@ import numpy as np
 
 
 def affine_forward(x, w, b):
-        """
-        Computes the forward pass for an affine (fully-connected) layer.
+    """
+    Computes the forward pass for an affine (fully-connected) layer.
 
-        The input x has shape (N, d_1, ..., d_k) and contains a minibatch of N
-        examples, where each example x[i] has shape (d_1, ..., d_k). We will
-        reshape each input into a vector of dimension D = d_1 * ... * d_k, and
-        then transform it to an output vector of dimension M.
+    The input x has shape (N, d_1, ..., d_k) and contains a minibatch of N
+    examples, where each example x[i] has shape (d_1, ..., d_k). We will
+    reshape each input into a vector of dimension D = d_1 * ... * d_k, and
+    then transform it to an output vector of dimension M.
 
-        Inputs:
-        - x: A numpy array containing input data, of shape (N, d_1, ..., d_k)
-        - w: A numpy array of weights, of shape (D, M)
-        - b: A numpy array of biases, of shape (M,)
+    Inputs:
+    - x: A numpy array containing input data, of shape (N, d_1, ..., d_k)
+    - w: A numpy array of weights, of shape (D, M)
+    - b: A numpy array of biases, of shape (M,)
 
-        Returns a tuple of:
-        - out: output, of shape (N, M)
-        - cache: (x, w, b)
-        """
-        out = None
+    Returns a tuple of:
+    - out: output, of shape (N, M)
+    - cache: (x, w, b)
+    """
+    out = None
 
-        ##########################################################################
-        # TODO: Implement the affine forward pass. Store the result in out. You  #
-        # will need to reshape the input into rows.                              #
-        ##########################################################################
-        N = x.shape[0]
-        D = np.prod(x.shape[1:])
-        x_s = x.reshape((N, D))
-        out = x_s.dot(w) + b
+    ##########################################################################
+    # TODO: Implement the affine forward pass. Store the result in out. You  #
+    # will need to reshape the input into rows.                              #
+    ##########################################################################
+    N = x.shape[0]
+    D = np.prod(x.shape[1:])
+    x_s = x.reshape((N, D))
+    out = x_s.dot(w) + b
 
-        cache = (x, w, b)
-        return out, cache
+    cache = (x, w, b)
+    return out, cache
+
 
 def relu_forward(x):
-        """
-        Computes the forward pass for a layer of rectified linear units (ReLUs).
+    """
+    Computes the forward pass for a layer of rectified linear units (ReLUs).
 
-        Input:
-        - x: Inputs, of any shape
+    Input:
+    - x: Inputs, of any shape
 
-        Returns a tuple of:
-        - out: Output, of the same shape as x
-        - cache: x
-        """
-        out = None
-        #############################################################################
-        # TODO: Implement the ReLU forward pass.                                    #
-        #############################################################################
-        out = np.maximum(0, x)
-        cache = x
-        return out, cache
+    Returns a tuple of:
+    - out: Output, of the same shape as x
+    - cache: x
+    """
+    out = None
+    #############################################################################
+    # TODO: Implement the ReLU forward pass.                                    #
+    #############################################################################
+    out = np.maximum(0, x)
+    cache = x
+    return out, cache
 
 
 def affine_backward(dout, cache):
-        """
-        Computes the backward pass for an affine layer.
+    """
+    Computes the backward pass for an affine layer.
 
-        Inputs:
-        - dout: Upstream derivative, of shape (N, M)
-        - cache: Tuple of:
-        - x: Input data, of shape (N, d_1, ... d_k)
-        - w: Weights, of shape (D, M)
+    Inputs:
+    - dout: Upstream derivative, of shape (N, M)
+    - cache: Tuple of:
+    - x: Input data, of shape (N, d_1, ... d_k)
+    - w: Weights, of shape (D, M)
 
-        Returns a tuple of:
-        - dx: Gradient with respect to x, of shape (N, d1, ..., d_k)
-        - dw: Gradient with respect to w, of shape (D, M)
-        - db: Gradient with respect to b, of shape (M,)
-        """
-        x, w, b = cache
-        dx, dw, db = None, None, None
-        #############################################################################
-        # TODO: Implement the affine backward pass.                                 #
-        #############################################################################
-        N = x.shape[0]
-        D = np.prod(x.shape[1:])
+    Returns a tuple of:
+    - dx: Gradient with respect to x, of shape (N, d1, ..., d_k)
+    - dw: Gradient with respect to w, of shape (D, M)
+    - db: Gradient with respect to b, of shape (M,)
+    """
+    x, w, b = cache
+    dx, dw, db = None, None, None
+    #############################################################################
+    # TODO: Implement the affine backward pass.                                 #
+    #############################################################################
+    N = x.shape[0]
+    D = np.prod(x.shape[1:])
 
-        dx = dout.dot(w.T)
-        dx = dx.reshape((x.shape))
+    dx = dout.dot(w.T)
+    dx = dx.reshape((x.shape))
 
-        x_s = x.reshape((N, D))
-        dw = x_s.T.dot(dout)
+    x_s = x.reshape((N, D))
+    dw = x_s.T.dot(dout)
 
-        db = np.sum(dout, axis=0)
+    db = np.sum(dout, axis=0)
 
-        return dx, dw, db
+    return dx, dw, db
+
 
 def relu_backward(dout, cache):
-        """
-        Computes the backward pass for a layer of rectified linear units (ReLUs).
+    """
+    Computes the backward pass for a layer of rectified linear units (ReLUs).
 
-        Input:
-        - dout: Upstream derivatives, of any shape
-        - cache: Input x, of same shape as dout
+    Input:
+    - dout: Upstream derivatives, of any shape
+    - cache: Input x, of same shape as dout
 
-        Returns:
-        - dx: Gradient with respect to x
-        """
-        dx, x = None, cache
+    Returns:
+    - dx: Gradient with respect to x
+    """
+    dx, x = None, cache
 
-        #############################################################################
-        # TODO: Implement the ReLU backward pass.                                   #
-        #############################################################################
-        dx = np.array(dout, copy=True)
-        dx[x <= 0] = 0
+    #############################################################################
+    # TODO: Implement the ReLU backward pass.                                   #
+    #############################################################################
+    dx = np.array(dout, copy=True)
+    dx[x <= 0] = 0
 
-        return dx
+    return dx
 
 
 def batchnorm_forward(x, gamma, beta, bn_param):
@@ -157,19 +159,19 @@ def batchnorm_forward(x, gamma, beta, bn_param):
 
     out, cache = None, None
     if mode == 'train':
-    #############################################################################
-    # TODO: Implement the training-time forward pass for batch normalization.   #
-    # Use minibatch statistics to compute the mean and variance, use these      #
-    # statistics to normalize the incoming data, and scale and shift the        #
-    # normalized data using gamma and beta.                                     #
-    #                                                                           #
-    # You should store the output in the variable out. Any intermediates that   #
-    # you need for the backward pass should be stored in the cache variable.    #
-    #                                                                           #
-    # You should also use your computed sample mean and variance together with  #
-    # the momentum variable to update the running mean and running variance,    #
-    # storing your result in the running_mean and running_var variables.        #
-    #############################################################################
+        #############################################################################
+        # TODO: Implement the training-time forward pass for batch normalization.   #
+        # Use minibatch statistics to compute the mean and variance, use these      #
+        # statistics to normalize the incoming data, and scale and shift the        #
+        # normalized data using gamma and beta.                                     #
+        #                                                                           #
+        # You should store the output in the variable out. Any intermediates that   #
+        # you need for the backward pass should be stored in the cache variable.    #
+        #                                                                           #
+        # You should also use your computed sample mean and variance together with  #
+        # the momentum variable to update the running mean and running variance,    #
+        # storing your result in the running_mean and running_var variables.        #
+        #############################################################################
 
         sample_mean = (1 / N) * np.sum(x, axis=0)
         sample_var = (1 / N) * np.sum((x - sample_mean) ** 2, axis=0)
@@ -271,7 +273,7 @@ def batchnorm_backward_alt(dout, cache):
     #############################################################################
 
     N = dout.shape[0]
-    x_normalized, gamma, std = cache
+    x_normalized, gamma, beta, std = cache
 
     dgamma = np.sum(dout * x_normalized, axis=0)
     dbeta = np.sum(dout, axis=0)
@@ -638,7 +640,20 @@ def spatial_batchnorm_forward(x, gamma, beta, bn_param):
     # version of batch normalization defined above. Your implementation should  #
     # be very short; ours is less than five lines.                              #
     #############################################################################
-    pass
+    np.set_printoptions(precision=3)
+    N, C, H, W = x.shape
+
+    # Permute and reshape input so batchnorm can work with all pixels per example
+    # Here, we're transposing to examples x height x width x channels
+    x_shaped = x.transpose(0, 2, 3, 1)
+    x_shaped = x_shaped.reshape((N * H * W, C))  # N x D shape
+    out_temp, cache = batchnorm_forward(x_shaped, gamma, beta, bn_param)
+
+    # Return normalized input to original form
+    # undo the reshaping (N x D -> examples x height x width x shape)
+    # transpose back to N x C x H x C
+    out = out_temp.reshape(N, H, W, C).transpose(0, 3, 1, 2)
+
     #############################################################################
     #                             END OF YOUR CODE                              #
     #############################################################################
@@ -668,7 +683,13 @@ def spatial_batchnorm_backward(dout, cache):
     # version of batch normalization defined above. Your implementation should  #
     # be very short; ours is less than five lines.                              #
     #############################################################################
-    pass
+    N, C, H, W = dout.shape
+    # NCHW -> NHWC -> N* D
+    dout_shaped = dout.transpose(0, 2, 3, 1).reshape(((N * H * W), C))
+
+    dx, dgamma, dbeta = batchnorm_backward(dout_shaped, cache)
+    # N* D -> NHWC -> NCHW
+    dx = dx.reshape((N, H, W, C)).transpose(0, 3, 1, 2)  # NCHW
     #############################################################################
     #                             END OF YOUR CODE                              #
     #############################################################################
